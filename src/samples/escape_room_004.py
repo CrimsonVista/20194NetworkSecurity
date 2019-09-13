@@ -316,7 +316,7 @@ class EscapeRoomGame:
         self.agents.append(self.flyingkey_agent(flyingkey))
         self.status = "created"
         
-    def move_flyingkey(flyingkey):
+    def move_flyingkey(self, flyingkey):
         locations = ["ceiling","floor","wall"]
         locations.remove(flyingkey["location"])
         random.shuffle(locations)
