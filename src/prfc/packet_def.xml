@@ -1,0 +1,13 @@
+<t>
+      <figure>
+          <artwork><![CDATA[
+        class PIMPPacket(PacketType):
+            DEFINITION_IDENTIFIER = # Your packet name here
+            DEFINITION_VERSION = "1.0"
+            FIELDS = [
+                # Your fields here
+            ]
+                  ]]>
+          </artwork>
+      </figure>
+	   </t>
