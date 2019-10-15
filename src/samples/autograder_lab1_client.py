@@ -102,6 +102,7 @@ class Lab1AutogradeClient(asyncio.Protocol):
         self.my_server_port = random.randint(50000,60000)
         self.server_test_protocol = None
         self.server = None
+        self.test_id = None
         
     def connection_made(self, transport):
         if self.mode != "submit":
@@ -153,6 +154,7 @@ class Lab1AutogradeClient(asyncio.Protocol):
             if self.state == "test_start" and packet.submit_status == packet.PASSED:
                 self.server_port = packet.server_port
                 self.state = "client_test"
+                self.test_id = packet.test_id
                 
             elif self.state == "client_test":
                 if isinstance(packet, autograder_packets.AutogradeClientCommand):
@@ -171,7 +173,7 @@ class Lab1AutogradeClient(asyncio.Protocol):
                     f.add_done_callback(self.test_complete)
                 elif isinstance(packet, autograder_packets.AutogradeTestStatus) and packet.server_status == packet.PASSED:
                     self.state = "done"
-                    print("all tests passed.")
+                    print("all tests passed for test_id {}".format(self.test_id))
                     asyncio.get_event_loop().stop()
                 else:
                     raise Exception("Unexpected packet for client test. {}".format(packet))
