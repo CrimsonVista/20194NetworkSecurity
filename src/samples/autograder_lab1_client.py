@@ -19,7 +19,7 @@ class DummyProtocol(asyncio.Protocol):
         
     def connection_lost(self, exc):
         self.disconnected.set_result(True)
-        if not self.connected.finished():
+        if not self.connected.done():
             self.connected.set_exception(Exception("Connection_made never called"))
         self.transport = None
         self.state = "connection_lost"
