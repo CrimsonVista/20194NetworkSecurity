@@ -242,7 +242,7 @@ if __name__ == "__main__":
         
     
     loop = asyncio.get_event_loop()
-    coro = playground.create_connection(lambda: Lab1AutogradeClient(server_addr, test_type, mode), host='localhost', port=19101)
+    coro = playground.create_connection(lambda: Lab1AutogradeClient(server_addr, test_type, mode), host=server_addr, port=19101)
     
     transport, protocol = loop.run_until_complete(coro)
     print("Connected on", transport.get_extra_info("peername"))
