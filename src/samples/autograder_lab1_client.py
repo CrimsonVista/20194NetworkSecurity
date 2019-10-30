@@ -1,4 +1,4 @@
-import os, asyncio, random
+import os, asyncio, random, struct
 import playground
 
 import autograder_lab1_packets as autograder_packets
@@ -17,7 +17,7 @@ class DummyProtocol(asyncio.Protocol):
         self.transport = transport
         self.state = "connection_made"
         
-    def connection_lost(self, exc):
+    def connection_lost(self, exc=None):
         self.disconnected.set_result(True)
         if not self.connected.done():
             self.connected.set_exception(Exception("Connection_made never called"))
@@ -27,6 +27,19 @@ class DummyProtocol(asyncio.Protocol):
     def data_received(self, data):
         self.rx_storage.append(data)
         self.rx.set()
+        
+class DummyEchoProtocol(DummyProtocol):
+    def __init__(self):
+        super().__init__()
+        self.echo_bytes = 0
+        self.max_bytes = None
+    def data_received(self, data):
+        if self.max_bytes == None:
+            self.max_bytes = struct.unpack_from("Q",data)[0]
+        self.transport.write(data)
+        self.echo_bytes += len(data)
+        if self.echo_bytes >= self.max_bytes:
+            self.transport.close()
 
 
 class Lab1TestProtocol_Server(asyncio.Protocol):
@@ -227,8 +240,13 @@ class Lab1AutogradeClient(asyncio.Protocol):
             await self.server_test_protocol.connected
             if self.server_test_protocol.transport and not self.server_test_protocol.transport.is_closing():
                 self.server_test_protocol.transport.close()
-                
-            
+        elif server_command == "echo":
+            self.server_test_protocol = DummyEchoProtocol()
+            self.transport.write(autograder_packets.AutogradeCommandAck().__serialize__())
+            await self.server_test_protocol.disconnected
+            print("Server test disconnected. Close transport.", self.server_test_protocol.transport)
+            if self.server_test_protocol.transport and not self.server_test_protocol.transport.is_closing():
+                self.server_test_protocol.transport.close() 
                 
     def close_client(self):
         self.transport.close()
@@ -236,7 +254,7 @@ class Lab1AutogradeClient(asyncio.Protocol):
                 
 if __name__ == "__main__":
     import sys
-    from playground.common.logging import EnablePresetLogging, PRESET_VERBOSE
+    from playground.common.logging import EnablePresetLogging, PRESET_VERBOSE, PRESET_DEBUG
     EnablePresetLogging(PRESET_VERBOSE)
     
     server_addr, team_number, test_type, mode = sys.argv[1:]
