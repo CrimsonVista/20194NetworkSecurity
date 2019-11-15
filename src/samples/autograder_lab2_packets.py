@@ -12,6 +12,7 @@ class AutogradeStartTest(PacketType):
     
     FIELDS = [
         ("team", UINT8),
+        ("email", STRING),
         ("port", UINT16),
         ("test_type", STRING)
         ]
