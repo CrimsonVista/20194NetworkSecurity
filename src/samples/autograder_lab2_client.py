@@ -106,7 +106,7 @@ class Lab2TestProtocol_Server(asyncio.Protocol):
                 
 class Lab2AutogradeClient(asyncio.Protocol):
     
-    def __init__(self, server_addr, team_number, test_type, mode):
+    def __init__(self, server_addr, team_number, email, test_type, mode):
         self.test_type = test_type
         self.mode = mode
         self.server_addr = server_addr
@@ -117,6 +117,7 @@ class Lab2AutogradeClient(asyncio.Protocol):
         self.server = None
         self.test_id = None
         self.team_number = team_number
+        self.email = email
         
     def connection_made(self, transport):
         if self.mode != "submit":
@@ -129,6 +130,7 @@ class Lab2AutogradeClient(asyncio.Protocol):
             transport.write(
                 autograder_packets.AutogradeStartTest(
                     team=team_number,
+                    email=self.email,
                     test_type=self.test_type,
                     port=self.my_server_port).__serialize__())
             self.state = "test_start"
@@ -257,11 +259,11 @@ if __name__ == "__main__":
     from playground.common.logging import EnablePresetLogging, PRESET_VERBOSE, PRESET_DEBUG
     EnablePresetLogging(PRESET_VERBOSE)
     
-    server_addr, team_number, test_type, mode = sys.argv[1:]
+    server_addr, team_number, email, test_type, mode = sys.argv[1:]
         
     
     loop = asyncio.get_event_loop()
-    coro = playground.create_connection(lambda: Lab2AutogradeClient(server_addr, team_number, test_type, mode), host=server_addr, port=19102)
+    coro = playground.create_connection(lambda: Lab2AutogradeClient(server_addr, team_number, email, test_type, mode), host=server_addr, port=19102)
     
     transport, protocol = loop.run_until_complete(coro)
     print("Connected on", transport.get_extra_info("peername"))
@@ -271,4 +273,3 @@ if __name__ == "__main__":
         pass
 
     loop.close()
-
